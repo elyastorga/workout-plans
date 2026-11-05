@@ -1,6 +1,6 @@
 // Guarda la app en el iPhone para que funcione sin internet.
 // Si cambias algún archivo, sube el número de versión.
-const CACHE = "migym-v3";
+const CACHE = "migym-v7";
 const FILES = ["./", "index.html", "programs.js", "manifest.json", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "InstrumentSerif-Regular.ttf"];
 
 self.addEventListener("install", e => {
@@ -20,7 +20,7 @@ self.addEventListener("fetch", e => {
     return;
   }
   e.respondWith(
-    fetch(e.request).then(res => {
+    fetch(e.request, { cache: "no-store" }).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
       return res;

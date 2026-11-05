@@ -204,21 +204,21 @@ function render() {
 
   day.ex.forEach((e, ei) => {
     const [name, sets, reps, type] = e;
-    const isTime = type === "time";
+    const isTime = type === "time" || type === "min"; const isMin = type === "min";
     const cur = sess.sets[ei] || [];
     const prev = last?.s.sets?.[ei] || [];
     const rest = suggestedRest(reps);
     const allDone = cur.length >= sets && cur.slice(0, sets).every(x => x?.done);
     let lastTxt = "";
     if (prev.some(x => x && (x.kg || x.reps))) {
-      lastTxt = prev.map(x => isTime ? `${x.reps||"–"}s` : `${x.kg||"–"}×${x.reps||"–"}`).join(" · ");
+      lastTxt = prev.map(x => isTime ? `${x.reps||"–"}${isMin?" min":"s"}` : `${x.kg||"–"}×${x.reps||"–"}`).join(" · ");
       const top = parseInt(String(reps).split("-")[1], 10);
       const hitTop = !isTime && top && prev.length >= sets && prev.slice(0, sets).every(x => +x.reps >= top);
       lastTxt = `Última vez (${fmtDate(last.date)}): ${lastTxt}${hitTop ? '<span class="badge">↑ sube peso</span>' : ""}`;
     }
     h += `<div class="card ex ${allDone?"done-ex":""}">
       <h3>${name}</h3>
-      <div class="meta">${sets} × ${reps}${isTime?"":" reps"} · descanso ${Math.floor(rest/60)}:${String(rest%60).padStart(2,"0")}</div>
+      <div class="meta">${isMin ? reps : `${sets} × ${reps}${isTime?"":" reps"} · descanso ${Math.floor(rest/60)}:${String(rest%60).padStart(2,"0")}`}</div>
       ${lastTxt ? `<div class="last">${lastTxt}</div>` : ""}
       <div class="sets">`;
     for (let si = 0; si < sets; si++) {
@@ -226,7 +226,7 @@ function render() {
       h += `<div class="set">
         <div class="n">S${si+1}</div>
         ${isTime ? `<div></div>` : `<div class="unit"><input inputmode="decimal" data-ex="${ei}" data-set="${si}" data-f="kg" value="${c.kg??""}" placeholder="${pv.kg??""}"><span>kg</span></div>`}
-        <div class="unit"><input inputmode="numeric" data-ex="${ei}" data-set="${si}" data-f="reps" value="${c.reps??""}" placeholder="${pv.reps??""}"><span>${isTime?"seg":"reps"}</span></div>
+        <div class="unit"><input inputmode="numeric" data-ex="${ei}" data-set="${si}" data-f="reps" value="${c.reps??""}" placeholder="${pv.reps??""}"><span>${isMin?"min":isTime?"seg":"reps"}</span></div>
         <button class="check ${c.done?"on":""}" data-ex="${ei}" data-set="${si}" data-rest="${rest}" aria-label="Serie hecha">${c.done?"✓":""}</button>
       </div>`;
     }
@@ -317,6 +317,7 @@ function openMenu() {
     <button class="btn" id="mImport">📥 Restaurar respaldo</button>
     <input type="file" id="fileIn" accept=".json,application/json" style="display:none">
     <button class="btn" id="mClose">Cerrar</button>
+    <p class="muted">Versión 7 · Programas: ${Object.values(PROGRAMS).map(p=>p.name).join(", ")}</p>
     <p class="muted">Tus datos se guardan solo en este iPhone. Haz un respaldo de vez en cuando y guárdalo en Archivos o iCloud.</p>`;
   $("#sheet").classList.add("on");
   $("#progSel").onchange = ev => { S.program = ev.target.value; save(); curDay = null; render(); closeMenu(); };
@@ -369,7 +370,12 @@ function importData(ev) {
 }
 
 render();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(r => r.update()).catch(() => {});
+  // Cuando se instala una versión nueva, recarga una vez para mostrarla
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloaded) { reloaded = true; location.reload(); } });
+}
 </script>
 </body>
 </html>
