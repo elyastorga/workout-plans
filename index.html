@@ -12,6 +12,8 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Mi Gym</title>
 <style>
+  @font-face { font-family: "Instrument Serif"; src: url("InstrumentSerif-Regular.ttf") format("truetype"); font-display: swap; }
+  .serif, header h1, .ex h3, .sheet h2 { font-family: "Instrument Serif", Georgia, serif; font-weight: 400; }
   :root {
     --bg: #f4f7f6; --card: #ffffff; --ink: #18211f; --muted: #6b7a76; --line: #e3eae8;
     --accent: #1f9e8f; --accent-soft: #e2f4f1; --warn: #e07a2e; --ok: #2f9e55;
@@ -27,13 +29,13 @@
   body { padding: env(safe-area-inset-top) 0 calc(110px + env(safe-area-inset-bottom)); }
   .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px; }
   header { padding: 14px 0 6px; display: flex; align-items: center; justify-content: space-between; }
-  header h1 { font-size: 28px; margin: 0; letter-spacing: -0.02em; }
+  header h1 { font-size: 40px; line-height: 1; margin: 0; }
   header .focus { color: var(--muted); font-size: 14px; }
   .iconbtn { border: 0; background: var(--card); color: var(--ink); width: 40px; height: 40px;
     border-radius: 12px; font-size: 20px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
   .week { display: flex; align-items: center; justify-content: space-between; background: var(--card);
     border-radius: var(--radius); padding: 10px 12px; margin: 8px 0 12px; }
-  .week .lbl { font-weight: 600; } .week .sub { color: var(--muted); font-size: 13px; }
+  .week .lbl { font-family: "Instrument Serif", Georgia, serif; font-size: 24px; line-height: 1.1; } .week .sub { color: var(--muted); font-size: 13px; }
   .week button { border: 0; background: var(--accent-soft); color: var(--accent); width: 36px; height: 36px;
     border-radius: 10px; font-size: 20px; font-weight: 600; }
   .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
@@ -42,12 +44,13 @@
   .tab small { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
   .tab.on { background: var(--accent); color: #fff; } .tab.on small { color: rgba(255,255,255,.85); }
   .tab .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); margin-left: 4px; vertical-align: middle; }
+  .wname { font-size: 26px; line-height: 1.15; margin: 2px 2px 12px; }
   .card { background: var(--card); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
   .habits .row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
   .check { width: 28px; height: 28px; border-radius: 9px; border: 2px solid var(--line); background: transparent;
     color: #fff; font-size: 16px; flex: none; display: grid; place-items: center; }
   .check.on { background: var(--ok); border-color: var(--ok); }
-  .ex h3 { margin: 0; font-size: 17px; }
+  .ex h3 { margin: 0; font-size: 23px; line-height: 1.15; }
   .ex .meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
   .ex .last { margin-top: 8px; font-size: 13px; color: var(--muted); }
   .badge { display: inline-block; background: #fdeee2; color: var(--warn); font-weight: 600; font-size: 12px;
@@ -82,7 +85,7 @@
   .sheet.on { display: block; }
   .sheet .panel { position: absolute; left: 0; right: 0; bottom: 0; max-height: 85vh; overflow: auto;
     background: var(--bg); border-radius: 20px 20px 0 0; padding: 18px 16px calc(24px + env(safe-area-inset-bottom)); }
-  .sheet h2 { margin: 0 0 12px; font-size: 20px; }
+  .sheet h2 { margin: 0 0 12px; font-size: 28px; }
   .sheet .btn { display: block; width: 100%; border: 0; background: var(--card); color: var(--ink); font: inherit;
     text-align: left; padding: 14px; border-radius: 12px; margin-bottom: 8px; }
   .sheet .btn.danger { color: #c0392b; }
@@ -180,7 +183,7 @@ function render() {
   $("#pname").textContent = p.name;
   $("#pfocus").textContent = p.focus;
   $("#wkLabel").textContent = `Semana ${week()} de ${p.weeks}`;
-  $("#wkSub").textContent = `${ph.label} · ${ph.steps} pasos diarios`;
+  $("#wkSub").textContent = ph.steps ? `${ph.label} · ${ph.steps} pasos diarios` : ph.label;
 
   const t = today();
   $("#tabs").innerHTML = ph.days.map((d, i) => {
@@ -193,10 +196,11 @@ function render() {
   const sess = S.log[key] || { sets: {} };
   const last = lastSession(curDay, t);
 
-  let h = `<div class="card habits">
-    <div class="row"><button class="check ${sess.steps?"on":""}" data-habit="steps">${sess.steps?"✓":""}</button><div>${ph.steps} pasos</div></div>
+  let h = day.name ? `<div class="wname serif">${day.name}</div>` : "";
+  h += (ph.steps || day.cardio) ? `<div class="card habits">
+    ${ph.steps ? `<div class="row"><button class="check ${sess.steps?"on":""}" data-habit="steps">${sess.steps?"✓":""}</button><div>${ph.steps} pasos</div></div>` : ""}
     ${day.cardio ? `<div class="row"><button class="check ${sess.cardio?"on":""}" data-habit="cardio">${sess.cardio?"✓":""}</button><div>Cardio: ${day.cardio}</div></div>` : ""}
-  </div>`;
+  </div>` : "";
 
   day.ex.forEach((e, ei) => {
     const [name, sets, reps, type] = e;
